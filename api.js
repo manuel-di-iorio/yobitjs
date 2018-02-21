@@ -15,7 +15,7 @@ module.exports = Yobit => {
   // @param {Function} callback
   Yobit.prototype.getTicker = promisify(function getTicker({ pair }, callback) {
     if (!pair) throw new Error("pair is not defined");
-    this.publicRequest('ticker/' + pair, {}, callback)
+    this.publicRequest('ticker/' + pair, arguments[0], callback)
   })
 
   // @param {Object} params
@@ -28,7 +28,7 @@ module.exports = Yobit => {
       limit = null
     }
 
-    this.publicRequest('depth/' + pair, { limit }, callback)
+    this.publicRequest('depth/' + pair, arguments[0], callback)
   })
 
   // @param {Object} params
@@ -41,7 +41,7 @@ module.exports = Yobit => {
       limit = null
     }
 
-    this.publicRequest('trades/' + pair, { limit }, callback)
+    this.publicRequest('trades/' + pair, arguments[0], callback)
   })
 
 

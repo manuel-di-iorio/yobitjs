@@ -1,14 +1,14 @@
 {
   "name": "yobitjs",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Node.js API wrapper to the Yobit bitcoin exchange",
   "main": "index.js",
   "dependencies": {
+    "MD5": "1.3.0",
+    "crypto": "0.0.3",
     "request": "2.67.0",
     "underscore": "1.8.3",
-    "crypto": "0.0.3",
-    "verror": "1.6.0",
-    "MD5": "1.3.0"
+    "verror": "1.6.0"
   },
   "keywords": [
     "LiveCoin",
@@ -29,5 +29,8 @@
       "email": "manuel.diiorio.mail@gmail.com"
     }
   ],
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "mocha": "5.0.1"
+  }
 }
