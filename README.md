@@ -78,13 +78,13 @@ init()
 
 **Private methods**
 - getPrivateInfo()
+- addTrade( options )
+- cancelOrder( Options )
 - getActiveOrders( options )
+- getOrderInfo( options )
 - getTradeHistory( options )
 - getDepositAddress( options )
 - withdrawCoinsToAddress( options )
-- addTrade( options )
-- withdrawCoinsTcancelOrderoAddress( options )
-- getOrderInfo( options )
 
 ### For options and full reference, please see https://yobit.net/en/api
 
