@@ -15,8 +15,7 @@ const Yobit = require("yobitjs")
 // Note: api key and secret are optional: they allow to use private methods
 const client = new Yobit(yourApiKey, yourApiSecret)
 
-// Using an async function to allow async/await pattern
-const init = async () => {
+(async () => {
   try {
     const response = await client.getPrivateInfo()
     //{ rights: { info: 1, trade: 1, deposit: 1, withdraw: 1 },
@@ -63,9 +62,7 @@ const init = async () => {
   } catch (err) {
     console.log(err)
   }
-}
-
-init()
+})()
 ```
 
 # API reference
@@ -79,7 +76,7 @@ init()
 **Private methods**
 - getPrivateInfo()
 - addTrade( options )
-- cancelOrder( Options )
+- cancelOrder( options )
 - getActiveOrders( options )
 - getOrderInfo( options )
 - getTradeHistory( options )
