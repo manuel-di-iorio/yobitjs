@@ -1,6 +1,6 @@
 {
   "name": "yobitjs",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "Node.js API wrapper to the Yobit bitcoin exchange",
   "main": "index.js",
   "dependencies": {

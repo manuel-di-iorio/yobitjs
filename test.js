@@ -1,7 +1,7 @@
 const assert = require("assert")
 const Yobit = require('.')
 const http = require('http')
-process.env.DEBUG = true
+process.env.DEBUG = true;
 
 // Mock server
 const mockServer = http.createServer(function (req, res) {

@@ -189,6 +189,14 @@ function executeRequest(options, requestDesc, callback) {
       error.name = returnObject.error_code
     }
 
+    // Response with specific error {success: 0, error: "error"}
+    else if (_.has(returnObject, 'error')) {
+      error = new VError('%s %s returned error: "%s"', functionName,
+        requestDesc, returnObject.error)
+
+      error.name = returnObject.error
+    }
+
     callback(error, returnObject)
   })
 }
