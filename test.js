@@ -1,7 +1,6 @@
 const assert = require("assert")
 const Yobit = require('.')
 const http = require('http')
-process.env.DEBUG = true;
 
 // Mock server
 const mockServer = http.createServer(function (req, res) {
@@ -35,7 +34,6 @@ describe("new Yobit() - arguments test", function () {
     assert.doesNotThrow(() => new Yobit())
     assert.doesNotThrow(() => new Yobit("1"))
     assert.doesNotThrow(() => new Yobit("1", "1"))
-    assert.doesNotThrow(() => new Yobit("1", "1", "1"))
   })
 
   it("when apikey is provided, the nonce should be generated", function () {
@@ -48,7 +46,8 @@ describe("API calls", function () {
   let client
 
   beforeEach(function () {
-    client = new Yobit("mockApiKey", "mockApiServer", "http://localhost:9090")
+    client = new Yobit("mockApiKey", "mockApiServer")
+    client.server = "http://localhost:9090"
   })
 
   it("should throw when not passing mandatory options", async function () {

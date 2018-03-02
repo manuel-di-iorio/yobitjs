@@ -1,14 +1,16 @@
 {
   "name": "yobitjs",
-  "version": "0.0.3",
+  "version": "1.0.0",
   "description": "Node.js API wrapper to the Yobit bitcoin exchange",
   "main": "index.js",
   "dependencies": {
     "MD5": "1.3.0",
-    "crypto": "0.0.3",
     "request": "2.67.0",
     "underscore": "1.8.3",
     "verror": "1.6.0"
+  },
+  "scripts": {
+    "test": "node ./node_modules/mocha/bin/mocha ./test"
   },
   "keywords": [
     "LiveCoin",

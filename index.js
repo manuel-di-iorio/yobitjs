@@ -1,38 +1,47 @@
-var verbose = process.env.DEBUG
-
-var util = require('util'),
+const util = require('util'),
   _ = require('underscore'),
   request = require('request'),
   crypto = require('crypto'),
   VError = require('verror'),
   md5 = require('MD5')
 
-var Yobit = function Yobit(api_key, secret, server, timeout) {
+const Yobit = function Yobit(api_key = null, secret = null, verbose = false) {
+
+  // Set the verbose level
+  this.verbose = verbose
+
   this.api_key = api_key
   this.secret = secret
-
-  this.server = server || 'https://yobit.net'
+  this.server = 'https://yobit.net'
   this.publicApiPath = 'api/3'
   this.privateApiPath = 'tapi'
+  this.timeout = 20000
 
-  this.timeout = timeout || 20000
+  // Request retry settings
+  this.temptsMax = 10
+  this.temptsDelay = 500
+  this.temptsDelayProgressive = true
+  this.temptsDelayIncrement = 250
 
+  // Generate the nonce when the API key is provided
   if (api_key) {
-    var keySeed = parseInt(api_key.substring(0, 5), 16)
-    var dateSeed = parseInt(Date.now() / 1000)
+    const keySeed = parseInt(api_key.substring(0, 5), 16)
+    const dateSeed = parseInt(Date.now() / 1000)
     this.nonce = keySeed + dateSeed
   }
 }
 
+// Import the API methods
 require("./api")(Yobit)
 
-var headers = { "User-Agent": "nodejs-7.5-api-client" }
+
+const headers = { "User-Agent": "nodejs-7.5-api-client" }
 
 Yobit.prototype.privateRequest = function (method, params, callback) {
-  var functionName = 'Yobit.privateRequest()',
+  const functionName = 'Yobit.privateRequest()',
     self = this
 
-  var error
+  let error
 
   if (!this.api_key || !this.secret) {
     error = new VError('%s must provide api_key and secret to make this API request.', functionName)
@@ -49,23 +58,24 @@ Yobit.prototype.privateRequest = function (method, params, callback) {
     return callback(error)
   }
 
-  params.method = method
   params.nonce = this.generateNonce()
+  params.method = method
 
   headers.key = this.api_key
   headers.sign = this.signMessage(params)
 
-  var options = {
+  const options = {
     url: this.server + '/' + this.privateApiPath,
     method: 'POST',
     headers: headers,
-    form: params
+    form: params,
+    timeout: this.timeout,
   }
 
-  var requestDesc = util.format('%s request to url %s with method %s and params %s',
+  const requestDesc = util.format('%s request to url %s with method %s and params %s',
     options.method, options.url, method, JSON.stringify(params))
 
-  executeRequest(options, requestDesc, callback)
+  this.__executeRequest(options, requestDesc, callback)
 }
 
 /**
@@ -74,22 +84,18 @@ Yobit.prototype.privateRequest = function (method, params, callback) {
  * @return {String}           The request signature
  */
 Yobit.prototype.signMessage = function getMessageSignature(params) {
-  var data = []
+  let data = []
 
   for (let param in params) {
     data.push(`${param}=${params[param]}`)
   }
-  var data = data.join('&')
+  data = data.join('&')
 
-  hash = crypto.createHmac('sha512', this.secret)
-  hash.update(data)
-
-  return (hash.digest('hex'))
+  return crypto.createHmac('sha512', this.secret).update(data).digest('hex')
 }
 
 /**
  * This method returns a nonce for yobit's API, generated within the bounds (1 -> 2^31)
- * For "uniqueness" we add a shortened timestamp to a see driven by the API key
  * @return {String}           The unique request Nonce
  */
 Yobit.prototype.generateNonce = function getNonce() {
@@ -99,16 +105,16 @@ Yobit.prototype.generateNonce = function getNonce() {
 /**
  * This method returns the parameters as key=value pairs separated by & sorted by the key
  * @param  {Object}  params   The object to encode
- * @return {String}           formatted parameters
+ * @return {String}           Formatted parameters
  */
 function formatParameters(params) {
-  var sortedKeys = [],
+  let sortedKeys = [],
     formattedParams = ''
 
-  // sort the properties of the parameters
+  // Sort the properties of the parameters
   sortedKeys = _.keys(params).sort()
 
-  // create a string of key value pairs separated by '&' with '=' assignement
+  // Create a string of key value pairs separated by '&' with '=' assignement
   for (i = 0; i < sortedKeys.length; i++) {
     if (i !== 0) {
       formattedParams += '&'
@@ -120,8 +126,8 @@ function formatParameters(params) {
 }
 
 Yobit.prototype.publicRequest = function (method, params, callback) {
-  var functionName = 'Yobit.publicRequest()'
-  var error
+  const functionName = 'Yobit.publicRequest()'
+  let error
 
   if (!_.isObject(params)) {
     error = new VError('%s second parameter %s must be an object. If no params then pass an empty object {}', functionName, params)
@@ -133,35 +139,59 @@ Yobit.prototype.publicRequest = function (method, params, callback) {
     return callback(error)
   }
 
-  var url = this.server + '/' + this.publicApiPath + '/' + method + ''
-  if (verbose) console.log("Request URL is: " + url)
+  const url = this.server + '/' + this.publicApiPath + '/' + method + ''
+  if (this.verbose) console.log("Request URL is: " + url)
 
-  var options = {
+  const options = {
     url: url,
     method: 'GET',
     headers: headers,
     timeout: this.timeout,
     qs: params,
-    json: {}        // request will parse the json response into an object
+    json: {}        // Request will parse the json response into an object
   }
 
-  var requestDesc = util.format('%s request to url %s with parameters %s',
+  const requestDesc = util.format('%s request to url %s with parameters %s',
     options.method, options.url, JSON.stringify(params))
 
-  executeRequest(options, requestDesc, callback)
+  this.__executeRequest(options, requestDesc, callback)
 }
 
-function executeRequest(options, requestDesc, callback) {
-  var functionName = 'Yobit.executeRequest()'
+
+// Execute the request, handling the errors
+// @private
+Yobit.prototype.__executeRequest = function (options, requestDesc, callback, _tempts = 0, _temptsDelay = this.temptsDelay) {
+  const functionName = 'Yobit.__executeRequest()'
+  const self = this
 
   request(options, function (err, response, data) {
-    var error = null,   // default to no errors
+    let error = null,   // Default to no errors
       returnObject = data
 
     if (err) {
       error = new VError(err, '%s failed %s', functionName, requestDesc)
       error.name = err.code
     }
+
+    // Retry the request if there is a server error
+    else if (response.statusCode >= 500 && response.statusCode < 600
+      && _tempts < self.temptsMax) {
+
+      if (self.verbose) {
+        console.log("%s Retrying the request %s (tempt %d of %d)", functionName,
+          requestDesc, _tempts, self.temptsMax)
+      }
+
+      // Increase the retry delay when the progressive option is set
+      if (self.temptsDelayProgressive) {
+        _temptsDelay += self.temptsDelayIncrement
+      }
+
+      return setTimeout(self.__executeRequest.bind(self), _temptsDelay, options, requestDesc,
+        callback, ++_tempts, _temptsDelay)
+    }
+
+    // Error with another status code
     else if (response.statusCode < 200 || response.statusCode >= 300) {
       error = new VError('%s HTTP status code %s returned from %s', functionName,
         response.statusCode, requestDesc)
@@ -175,13 +205,15 @@ function executeRequest(options, requestDesc, callback) {
         error = new VError(e, 'Could not parse response from server: ' + data)
       }
     }
+
     // if json request was not able to parse json response into an object
     else if (options.json && !_.isObject(data)) {
-      error = new VError('%s could not parse response from %s\nResponse: %s', functionName, requestDesc, data)
+      error = new VError('%s could not parse response from %s\nResponse: %s', functionName,
+        requestDesc, data)
     }
 
     if (_.has(returnObject, 'error_code')) {
-      var errorMessage = mapErrorMessage(returnObject.error_code)
+      const errorMessage = mapErrorMessage(returnObject.error_code)
 
       error = new VError('%s %s returned error code %s, message: "%s"', functionName,
         requestDesc, returnObject.error_code, errorMessage)
@@ -194,7 +226,8 @@ function executeRequest(options, requestDesc, callback) {
       error = new VError('%s %s returned error: "%s"', functionName,
         requestDesc, returnObject.error)
 
-      error.name = returnObject.error
+      error.name = 400
+      error.message = returnObject.error
     }
 
     callback(error, returnObject)
@@ -209,7 +242,7 @@ function executeRequest(options, requestDesc, callback) {
  * @return {String}                error message
  */
 function mapErrorMessage(error_code) {
-  var errorCodes = {
+  const errorCodes = {
     10000: 'Required parameter can not be null',
     10001: 'Requests are too frequent',
     10002: 'System Error',

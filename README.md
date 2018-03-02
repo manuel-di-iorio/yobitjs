@@ -1,19 +1,14 @@
-Node.js API frontend for the Yobit Crypto Currency Exchange
+Node.js API for the Yobit Crypto Currency Exchange
 ===============
 
 Note: This repository is a fork of https://github.com/kwiksand/yobit which was unmaintained and untested.
-
-**Changes:**
-- All methods have been promisified.
-- Methods options are now passed through an object as first argument
-- Nonce is also atomically increased (per process), to allow multiple calls within a second
 
 **Example:**
 ```js
 const Yobit = require("yobitjs")
 
 // Note: api key and secret are optional: they allow to use private methods
-const client = new Yobit(yourApiKey, yourApiSecret)
+const client = new Yobit("yourApiKey", "yourApiSecret")
 
 (async () => {
   try {
@@ -67,6 +62,14 @@ const client = new Yobit(yourApiKey, yourApiSecret)
 
 # API reference
 
+**Class object**
+
+```js
+new Yobit(apiKey=null, apiSecret=null, debug=false)
+// enable debug param to log verbose info
+```
+
+
 **Public methods**
 - getInfo()
 - getTicker( options )
@@ -83,7 +86,33 @@ const client = new Yobit(yourApiKey, yourApiSecret)
 - getDepositAddress( options )
 - withdrawCoinsToAddress( options )
 
+---
+## Error reference
+
+The request error object is a [VError](https://github.com/joyent/node-verror) instance:
+
+```js
+} catch (err) {
+    console.log(err || err.message) // Error message
+    console.log(err.name) // Error code
+}
+```
+
 ### For options and full reference, please see https://yobit.net/en/api
+
+# V1.0 Changelog
+
+- Added automatic request retry when a server error occurs (up to 10 by default).
+- **[BC]** `verbose` option is now a parameter of the Yobit class and will not be retrieved anymore through process.env.DEBUG.
+- **[BC]** `server` and `timeout` have been removed from the class params. They are available into the client object
+- **[BC]** When Yobit returns `{success: false, error: "message"}` now the error code is set as 400 to `err.name`
+- [FIX] Missing timeout for private requests
+
+# Tests
+
+```bash
+$ yarn test
+```
 
 # License
 
