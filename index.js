@@ -16,6 +16,7 @@ const Yobit = function Yobit(api_key = null, secret = null, verbose = false) {
   this.publicApiPath = 'api/3'
   this.privateApiPath = 'tapi'
   this.timeout = 20000
+  this.requestModule = request
 
   // Request retry settings
   this.temptsMax = 10
@@ -164,7 +165,7 @@ Yobit.prototype.__executeRequest = function (options, requestDesc, callback, _te
   const functionName = 'Yobit.__executeRequest()'
   const self = this
 
-  request(options, function (err, response, data) {
+  this.requestModule(options, function (err, response, data) {
     let error = null,   // Default to no errors
       returnObject = data
 

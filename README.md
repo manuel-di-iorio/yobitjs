@@ -65,8 +65,8 @@ const client = new Yobit("yourApiKey", "yourApiSecret")
 **Class object**
 
 ```js
-new Yobit(apiKey=null, apiSecret=null, debug=false)
-// enable debug param to log verbose info
+new Yobit(api_key=null, secret=null, verbose=false)
+// enable verbose param to log debug info
 ```
 
 
@@ -100,7 +100,13 @@ The request error object is a [VError](https://github.com/joyent/node-verror) in
 
 ### For options and full reference, please see https://yobit.net/en/api
 
-# V1.0 Changelog
+# Changelog
+
+## V1.1
+
+- Added optional "request" module as configurable setting
+
+# V1.0
 
 - Added automatic request retry when a server error occurs (up to 10 by default).
 - **[BC]** `verbose` option is now a parameter of the Yobit class and will not be retrieved anymore through process.env.DEBUG.
