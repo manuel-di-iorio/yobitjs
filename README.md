@@ -1,7 +1,7 @@
 Node.js API for the Yobit Crypto Currency Exchange
 ===============
 
-Note: This repository is a fork of https://github.com/kwiksand/yobit which was unmaintained and untested.
+Note: This repository is a fork of https://github.com/kwiksand/yobit which was untested.
 
 **Example:**
 ```js
